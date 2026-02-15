@@ -17,7 +17,7 @@ The investigation revealed a missing import of the Zustand store in components/g
 - [x] **3. Adjust physics body friction and damping** <!-- id:qNqlnf -->
   Fine-tune the useBox configurations for tanks in tank.tsx to prevent excessive sliding or spinning during combat.
 
-- [ ] **4. Perform a full TypeScript verification** <!-- id:Ntqgm7 -->
+- [x] **4. Perform a full TypeScript verification** <!-- id:Ntqgm7 -->
   Run the workspace compiler check again to ensure no remaining implicit 'any' or missing module errors exist in the game directory.
 
 ---
