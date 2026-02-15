@@ -1,33 +1,24 @@
-# 3D Tank Battle Arena Implementation
+# Fix Game Scene Dependency Resolution
 
 ## Summary
-Build a high-performance 3D tank combat game using React Three Fiber, Cannon-es for physics, and Zustand for state management. The game features a player-controlled tank, AI enemies, physics-based projectiles, and a HUD for health/score tracking.
+This plan addresses the compilation error where useGameStore was not being correctly imported in the game scene component, while ensuring the 3D tank mechanics remain fully functional.
 
 ## Approach
-The application will utilize a modular component-based architecture for the 3D scene. Core logic will be split into: 1) A physical simulation layer using @react-three/cannon for realistic collisions and movement; 2) A global state store using Zustand to synchronize 3D events (hits, kills) with the 2D HUD; 3) Modular tank components with different controller setups (Player vs AI). Performance is optimized through the use of Three.js geometry reuse and simplified physical proxies. Styling uses semantic design tokens from the existing Shadcn/UI setup for the HUD and Game Over screens.
+The investigation revealed a missing import of the Zustand store in components/game/game-scene.tsx. I will verify that all dependencies are correctly linked and that the store exports align with the component's consumption. The implementation will ensure all 'use client' directives are properly placed for React Three Fiber hooks and that the game loop correctly handles the player and AI tank logic.
 
 ## Tasks
 
-- [x] **1. Initialize main game store** <!-- id:fFQS47 -->
-  Use Zustand to track score, player health, and game state (active/paused/game over) in hooks/use-game-store.ts.
+- [x] **1. Fix useGameStore import in game-scene.tsx** <!-- id:bGyVkx -->
+  Import useGameStore from '@/hooks/use-game-store' and verify the destructive assignment of bullets and removeBullet matches the store definition.
 
-- [x] **2. Create Physics-enabled Tank component** <!-- id:Udexvr -->
-  Implement components/game/tank.tsx using useBox for the chassis and nested meshes for the turret and barrel. Add keyboard controls for the player instance.
+- [ ] **2. Complete player movement logic in tank.tsx** <!-- id:-Zf4kC -->
+  Implement the movement and rotation physics within the useFrame hook in tank.tsx using the keys state for WASD controls.
 
-- [x] **3. Implement Projectile System** <!-- id:ze9JEq -->
-  Create components/game/bullet.tsx using useSphere physics. Add velocity interpolation and collision callbacks to trigger damage in the game store.
+- [ ] **3. Adjust physics body friction and damping** <!-- id:qNqlnf -->
+  Fine-tune the useBox configurations for tanks in tank.tsx to prevent excessive sliding or spinning during combat.
 
-- [x] **4. Build the Battlefield Scene** <!-- id:3icOfH -->
-  Assemble ground/plane physics, environmental lighting, and the Sky/Stars components in components/game/game-scene.tsx.
-
-- [x] **5. Design HUD and Game Over UI** <!-- id:9puCWy -->
-  Overlay a 2D interface using Tailwind and semantic tokens (bg-card, text-foreground) to display stats and a restart button.
-
-- [x] **6. Develop Basic AI Behavior** <!-- id:aTHjpu -->
-  Add simple logic to enemy tank instances to rotate toward the player and periodically spawn projectiles.
-
-- [x] **7. Integrate into App Router** <!-- id:1CP5Wi -->
-  Update app/page.tsx to render the GameScene within a client-side Suspense boundary.
+- [ ] **4. Perform a full TypeScript verification** <!-- id:Ntqgm7 -->
+  Run the workspace compiler check again to ensure no remaining implicit 'any' or missing module errors exist in the game directory.
 
 ---
 plan_id: M1dcGpd5

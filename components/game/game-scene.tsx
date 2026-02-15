@@ -3,6 +3,7 @@
 import { Canvas } from "@react-three/fiber";
 import { Physics } from "@react-three/cannon";
 import { Sky, Stars, ContactShadows, OrbitControls } from "@react-three/drei";
+import { useGameStore } from "@/hooks/use-game-store";
 import { Suspense, useState, useEffect } from "react";
 import { Tank } from "./tank";
 import { Ground } from "./ground";
