@@ -14,7 +14,7 @@ The application will utilize a modular component-based architecture for the 3D s
 - [x] **2. Create Physics-enabled Tank component** <!-- id:Udexvr -->
   Implement components/game/tank.tsx using useBox for the chassis and nested meshes for the turret and barrel. Add keyboard controls for the player instance.
 
-- [ ] **3. Implement Projectile System** <!-- id:ze9JEq -->
+- [x] **3. Implement Projectile System** <!-- id:ze9JEq -->
   Create components/game/bullet.tsx using useSphere physics. Add velocity interpolation and collision callbacks to trigger damage in the game store.
 
 - [ ] **4. Build the Battlefield Scene** <!-- id:3icOfH -->
