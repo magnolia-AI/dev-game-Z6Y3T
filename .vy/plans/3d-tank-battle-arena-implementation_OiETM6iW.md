@@ -26,7 +26,7 @@ The application will utilize a modular component-based architecture for the 3D s
 - [x] **6. Develop Basic AI Behavior** <!-- id:aTHjpu -->
   Add simple logic to enemy tank instances to rotate toward the player and periodically spawn projectiles.
 
-- [ ] **7. Integrate into App Router** <!-- id:1CP5Wi -->
+- [x] **7. Integrate into App Router** <!-- id:1CP5Wi -->
   Update app/page.tsx to render the GameScene within a client-side Suspense boundary.
 
 ---
