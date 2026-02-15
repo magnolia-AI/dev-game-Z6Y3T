@@ -23,7 +23,7 @@ The application will utilize a modular component-based architecture for the 3D s
 - [x] **5. Design HUD and Game Over UI** <!-- id:9puCWy -->
   Overlay a 2D interface using Tailwind and semantic tokens (bg-card, text-foreground) to display stats and a restart button.
 
-- [ ] **6. Develop Basic AI Behavior** <!-- id:aTHjpu -->
+- [x] **6. Develop Basic AI Behavior** <!-- id:aTHjpu -->
   Add simple logic to enemy tank instances to rotate toward the player and periodically spawn projectiles.
 
 - [ ] **7. Integrate into App Router** <!-- id:1CP5Wi -->

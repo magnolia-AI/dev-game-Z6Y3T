@@ -6,6 +6,7 @@ import { Sky, Stars, ContactShadows, OrbitControls } from "@react-three/drei";
 import { Suspense, useState, useEffect } from "react";
 import { Tank } from "./tank";
 import { Ground } from "./ground";
+import { Bullet } from "./bullet";
 
 export default function GameScene() {
   const [isClient, setIsClient] = useState(false);
@@ -15,6 +16,12 @@ export default function GameScene() {
   }, []);
 
   if (!isClient) return null;
+
+  return <GameContent />;
+}
+
+function GameContent() {
+  const { bullets, removeBullet } = useGameStore();
 
   return (
     <div className="absolute inset-0 bg-[#050505]">
@@ -66,6 +73,15 @@ export default function GameScene() {
             <Tank position={[20, 1, 20]} color="#ef4444" />
             <Tank position={[-25, 1, -15]} color="#ef4444" />
             <Tank position={[15, 1, -25]} color="#ef4444" />
+
+            {/* Bullets */}
+            {bullets.map((bullet) => (
+              <Bullet 
+                key={bullet.id}
+                {...bullet}
+                onHit={() => removeBullet(bullet.id)}
+              />
+            ))}
           </Physics>
 
           <ContactShadows 
@@ -89,4 +105,3 @@ export default function GameScene() {
     </div>
   );
 }
-

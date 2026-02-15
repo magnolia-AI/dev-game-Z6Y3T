@@ -15,6 +15,11 @@ interface GameState {
   endGame: () => void;
   resetGame: () => void;
   
+  // Bullets
+  bullets: Array<{ id: string; position: [number, number, number]; velocity: [number, number, number]; owner: "player" | "enemy" }>;
+  addBullet: (bullet: { position: [number, number, number]; velocity: [number, number, number]; owner: "player" | "enemy" }) => void;
+  removeBullet: (id: string) => void;
+  
   // Stat Mutations
   damagePlayer: (amount: number) => void;
   healPlayer: (amount: number) => void;
@@ -26,9 +31,10 @@ export const useGameStore = create<GameState>((set) => ({
   health: 100,
   score: 0,
   status: 'idle',
+  bullets: [],
 
   // Game Status Actions
-  startGame: () => set({ status: 'playing', health: 100, score: 0 }),
+  startGame: () => set({ status: 'playing', health: 100, score: 0, bullets: [] }),
   
   pauseGame: () => set((state) => ({ 
     status: state.status === 'playing' ? 'paused' : state.status 
@@ -43,8 +49,18 @@ export const useGameStore = create<GameState>((set) => ({
   resetGame: () => set({ 
     status: 'playing', 
     health: 100, 
-    score: 0 
+    score: 0,
+    bullets: []
   }),
+
+  // Bullet Actions
+  addBullet: (bullet) => set((state) => ({
+    bullets: [...state.bullets, { ...bullet, id: Math.random().toString(36).substr(2, 9) }]
+  })),
+
+  removeBullet: (id) => set((state) => ({
+    bullets: state.bullets.filter((b) => b.id !== id)
+  })),
 
   // Stat Mutations
   damagePlayer: (amount) => set((state) => {
@@ -63,4 +79,3 @@ export const useGameStore = create<GameState>((set) => ({
     score: state.score + points
   })),
 }));
-

@@ -6,14 +6,15 @@ import * as THREE from "three";
 import { useGameStore } from "@/hooks/use-game-store";
 
 interface BulletProps {
+  id: string;
   position: [number, number, number];
   velocity: [number, number, number];
   owner: "player" | "enemy";
   onHit?: () => void;
 }
 
-export function Bullet({ position, velocity, owner, onHit }: BulletProps) {
-  const { damagePlayer, addScore } = useGameStore();
+export function Bullet({ id, position, velocity, owner, onHit }: BulletProps) {
+  const { damagePlayer, addScore, removeBullet } = useGameStore();
   
   const [ref] = useSphere(() => ({
     mass: 0.1,
@@ -25,7 +26,7 @@ export function Bullet({ position, velocity, owner, onHit }: BulletProps) {
 
       // Handle damage logic based on who fired the bullet
       if (owner === "player") {
-        if (targetName?.includes("enemy")) {
+        if (targetName === "enemy") {
           addScore(10);
         }
       } else if (owner === "enemy") {
@@ -34,7 +35,8 @@ export function Bullet({ position, velocity, owner, onHit }: BulletProps) {
         }
       }
       
-      // Trigger the destruction of the bullet in the parent state
+      // Trigger the destruction of the bullet
+      removeBullet(id);
       if (onHit) onHit();
     },
   }), useRef<THREE.Mesh>(null));
@@ -42,10 +44,11 @@ export function Bullet({ position, velocity, owner, onHit }: BulletProps) {
   // Automatic cleanup after 3 seconds if no collision occurs
   useEffect(() => {
     const timeout = setTimeout(() => {
+      removeBullet(id);
       if (onHit) onHit();
     }, 3000);
     return () => clearTimeout(timeout);
-  }, [onHit]);
+  }, [id, onHit, removeBullet]);
 
   return (
     <mesh ref={ref} castShadow name={`${owner}-bullet`}>
@@ -58,4 +61,3 @@ export function Bullet({ position, velocity, owner, onHit }: BulletProps) {
     </mesh>
   );
 }
-
