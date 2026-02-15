@@ -14,7 +14,7 @@ The investigation revealed a missing import of the Zustand store in components/g
 - [x] **2. Complete player movement logic in tank.tsx** <!-- id:-Zf4kC -->
   Implement the movement and rotation physics within the useFrame hook in tank.tsx using the keys state for WASD controls.
 
-- [ ] **3. Adjust physics body friction and damping** <!-- id:qNqlnf -->
+- [x] **3. Adjust physics body friction and damping** <!-- id:qNqlnf -->
   Fine-tune the useBox configurations for tanks in tank.tsx to prevent excessive sliding or spinning during combat.
 
 - [ ] **4. Perform a full TypeScript verification** <!-- id:Ntqgm7 -->

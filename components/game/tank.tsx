@@ -30,6 +30,9 @@ export const Tank: React.FC<TankProps> = ({
     position,
     args: [2, 0.8, 3],
     name: isPlayer ? "player" : "enemy",
+    friction: 0.5,           // Prevent excessive sliding
+    linearDamping: 0.8,      // Slow down linear movement quickly when inputs stop
+    angularDamping: 0.9,     // Prevent spinning wildly after hitting something
   }), useRef<THREE.Group>(null));
 
   const turretRef = useRef<THREE.Group>(null!);
