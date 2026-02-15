@@ -1,0 +1,39 @@
+import './globals.css'
+import type { Metadata } from 'next'
+import { Toaster } from "@/components/ui/toaster"
+import { ThemeProvider } from '@/components/theme-provider'
+import { AuthProvider } from '@/components/auth-provider'
+import { AuthHeader } from '@/components/auth-header'
+import { neonAuth } from '@neondatabase/auth/next/server'
+
+export const metadata: Metadata = {
+  title: 'VY App',
+  description: 'My VY App',
+  icons: {
+    icon: '/favicon.ico',
+  },
+}
+
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const initialSession = await neonAuth();
+
+  return (
+    <html lang="en" className="h-full" suppressHydrationWarning>
+      <body className="h-full flex flex-col antialiased bg-background text-foreground">
+        <ThemeProvider defaultTheme="light" attribute="class">
+          <AuthProvider initialSession={initialSession}>
+            {/* <AuthHeader /> */}
+            <main className="flex-1">
+              {children}
+            </main>
+            <Toaster />
+          </AuthProvider>
+        </ThemeProvider>
+      </body>
+    </html>
+  )
+}
