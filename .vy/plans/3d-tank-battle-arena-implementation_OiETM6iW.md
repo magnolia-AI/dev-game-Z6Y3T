@@ -20,7 +20,7 @@ The application will utilize a modular component-based architecture for the 3D s
 - [x] **4. Build the Battlefield Scene** <!-- id:3icOfH -->
   Assemble ground/plane physics, environmental lighting, and the Sky/Stars components in components/game/game-scene.tsx.
 
-- [ ] **5. Design HUD and Game Over UI** <!-- id:9puCWy -->
+- [x] **5. Design HUD and Game Over UI** <!-- id:9puCWy -->
   Overlay a 2D interface using Tailwind and semantic tokens (bg-card, text-foreground) to display stats and a restart button.
 
 - [ ] **6. Develop Basic AI Behavior** <!-- id:aTHjpu -->
