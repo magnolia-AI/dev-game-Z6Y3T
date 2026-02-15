@@ -101,7 +101,65 @@ export const Tank: React.FC<TankProps> = ({
     if (!ref.current) return;
 
     if (isPlayer && status === "playing") {
-      // ... player logic remains ...
+      // Linear Movement (W/S)
+      const moveForward = keys["w"] || keys["arrowup"] ? 1 : 0;
+      const moveBackward = keys["s"] || keys["arrowdown"] ? 1 : 0;
+      const moveDirection = moveForward - moveBackward;
+
+      // Calculate direction vector based on current rotation
+      const currentRotation = new THREE.Euler(rotation.current[0], rotation.current[1], rotation.current[2]);
+      const forwardVector = new THREE.Vector3(0, 0, 1).applyEuler(currentRotation);
+      
+      // Apply linear velocity
+      api.velocity.set(
+        forwardVector.x * moveDirection * TANK_SPEED,
+        velocity.current[1], // keep gravity
+        forwardVector.z * moveDirection * TANK_SPEED
+      );
+
+      // Rotation (A/D)
+      const rotateLeft = keys["a"] || keys["arrowleft"] ? 1 : 0;
+      const rotateRight = keys["d"] || keys["arrowright"] ? 1 : 0;
+      const rotationDir = rotateLeft - rotateRight;
+      
+      // Apply angular velocity
+      api.angularVelocity.set(0, rotationDir * ROTATION_SPEED, 0);
+
+      // Camera Follow
+      const tankPosition = new THREE.Vector3();
+      ref.current.getWorldPosition(tankPosition);
+      
+      const cameraOffset = new THREE.Vector3(0, 15, -15).applyEuler(currentRotation);
+      const targetCameraPos = tankPosition.clone().add(cameraOffset);
+      camera.position.lerp(targetCameraPos, 0.1);
+      camera.lookAt(tankPosition);
+
+      // Turret rotation (follows mouse)
+      if (turretRef.current) {
+        const mouseX = (state.mouse.x * state.viewport.width) / 2;
+        const mouseZ = (state.mouse.y * state.viewport.height) / 2;
+        
+        // Find ground intersection (simpler mouse projection for this game)
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(state.mouse, camera);
+        const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+        const targetPoint = new THREE.Vector3();
+        raycaster.ray.intersectPlane(plane, targetPoint);
+
+        const turretWorldPos = new THREE.Vector3();
+        turretRef.current.getWorldPosition(turretWorldPos);
+        const dir = new THREE.Vector3().subVectors(targetPoint, turretWorldPos);
+        dir.y = 0;
+
+        const targetQuaternion = new THREE.Quaternion().setFromUnitVectors(
+          new THREE.Vector3(0, 0, 1),
+          dir.normalize()
+        );
+
+        const parentQuat = new THREE.Quaternion().setFromEuler(currentRotation);
+        const localQuat = parentQuat.invert().multiply(targetQuaternion);
+        turretRef.current.quaternion.slerp(localQuat, 0.1);
+      }
     } else if (!isPlayer && status === "playing") {
       // AI Logic
       const worldPos = new THREE.Vector3();

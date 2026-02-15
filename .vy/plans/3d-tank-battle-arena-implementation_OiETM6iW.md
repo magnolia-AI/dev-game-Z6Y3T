@@ -11,7 +11,7 @@ The investigation revealed a missing import of the Zustand store in components/g
 - [x] **1. Fix useGameStore import in game-scene.tsx** <!-- id:bGyVkx -->
   Import useGameStore from '@/hooks/use-game-store' and verify the destructive assignment of bullets and removeBullet matches the store definition.
 
-- [ ] **2. Complete player movement logic in tank.tsx** <!-- id:-Zf4kC -->
+- [x] **2. Complete player movement logic in tank.tsx** <!-- id:-Zf4kC -->
   Implement the movement and rotation physics within the useFrame hook in tank.tsx using the keys state for WASD controls.
 
 - [ ] **3. Adjust physics body friction and damping** <!-- id:qNqlnf -->
