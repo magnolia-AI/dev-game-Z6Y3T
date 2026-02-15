@@ -1,58 +1,56 @@
 "use client";
 
-import { useBox, useRaycastVehicle } from "@react-three/cannon";
+import React, { useRef, useState, useEffect } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { useEffect, useRef, useState } from "react";
+import { useBox } from "@react-three/cannon";
 import * as THREE from "three";
 import { useGameStore } from "@/hooks/use-game-store";
 
-const TANK_WIDTH = 2;
-const TANK_HEIGHT = 1;
-const TANK_LENGTH = 3;
+interface TankProps {
+  position?: [number, number, number];
+  isPlayer?: boolean;
+}
 
-export function Tank({ position = [0, 0, 0] as [number, number, number], isPlayer = false, color = "green" }) {
+const TANK_SPEED = 8;
+const ROTATION_SPEED = 2.5;
+
+export const Tank: React.FC<TankProps> = ({ position = [0, 0.5, 0], isPlayer = false }) => {
+  const { status, damagePlayer } = useGameStore();
   const { camera } = useThree();
-  const decrementHealth = useGameStore((state) => state.decrementHealth);
+  const [keys, setKeys] = useState<Record<string, boolean>>({});
   
-  const [chassisRef, chassisApi] = useBox(() => ({
-    mass: 1500,
+  // Physics body for the chassis
+  const [ref, api] = useBox(() => ({
+    mass: 1000, // Heavier mass for tank feel
     position,
-    args: [TANK_WIDTH, TANK_HEIGHT, TANK_LENGTH],
+    args: [2, 0.8, 3], // Chassis dimensions
     onCollide: (e) => {
-        // Handle collisions if needed
+      // Logic for taking damage from high-velocity impact could go here if needed
     }
   }), useRef<THREE.Group>(null));
 
-  const [controls, setControls] = useState({
-    forward: false,
-    backward: false,
-    left: false,
-    right: false,
-    shoot: false
-  });
+  const turretRef = useRef<THREE.Group>(null!);
+  const barrelRef = useRef<THREE.Mesh>(null!);
+  
+  // Local state for tracking physics values (cloned for safety)
+  const velocity = useRef([0, 0, 0]);
+  const rotation = useRef([0, 0, 0]);
 
+  useEffect(() => {
+    const unsubVel = api.velocity.subscribe((v) => (velocity.current = v));
+    const unsubRot = api.rotation.subscribe((r) => (rotation.current = r));
+    return () => {
+      unsubVel();
+      unsubRot();
+    };
+  }, [api]);
+
+  // Handle keyboard inputs
   useEffect(() => {
     if (!isPlayer) return;
 
-    const handleKeyDown = (e: KeyboardEvent) => {
-      switch (e.key.toLowerCase()) {
-        case "w": setControls(c => ({ ...c, forward: true })); break;
-        case "s": setControls(c => ({ ...c, backward: true })); break;
-        case "a": setControls(c => ({ ...c, left: true })); break;
-        case "d": setControls(c => ({ ...c, right: true })); break;
-        case " ": setControls(c => ({ ...c, shoot: true })); break;
-      }
-    };
-
-    const handleKeyUp = (e: KeyboardEvent) => {
-      switch (e.key.toLowerCase()) {
-        case "w": setControls(c => ({ ...c, forward: false })); break;
-        case "s": setControls(c => ({ ...c, backward: false })); break;
-        case "a": setControls(c => ({ ...c, left: false })); break;
-        case "d": setControls(c => ({ ...c, right: false })); break;
-        case " ": setControls(c => ({ ...c, shoot: false })); break;
-      }
-    };
+    const handleKeyDown = (e: KeyboardEvent) => setKeys((k) => ({ ...k, [e.code.toLowerCase()]: true, [e.key.toLowerCase()]: true }));
+    const handleKeyUp = (e: KeyboardEvent) => setKeys((k) => ({ ...k, [e.code.toLowerCase()]: false, [e.key.toLowerCase()]: false }));
 
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
@@ -62,60 +60,112 @@ export function Tank({ position = [0, 0, 0] as [number, number, number], isPlaye
     };
   }, [isPlayer]);
 
-  // Movement Logic
   useFrame((state) => {
-    if (!chassisRef.current) return;
+    if (!ref.current) return;
 
-    const velocity = new THREE.Vector3();
-    const pos = new THREE.Vector3();
-    const quat = new THREE.Quaternion();
+    if (isPlayer && status === "playing") {
+      // 1. Movement Logic
+      const forward = (keys["w"] || keys["arrowup"] ? 1 : 0) - (keys["s"] || keys["arrowdown"] ? 1 : 0);
+      const turn = (keys["a"] || keys["arrowleft"] ? 1 : 0) - (keys["d"] || keys["arrowright"] ? 1 : 0);
 
-    chassisRef.current.getWorldPosition(pos);
-    chassisRef.current.getWorldQuaternion(quat);
+      // Rotation
+      if (turn !== 0) {
+        api.angularVelocity.set(0, turn * ROTATION_SPEED, 0);
+      } else {
+        api.angularVelocity.set(0, 0, 0);
+      }
 
-    if (isPlayer) {
-      // Simple movement for now (direct velocity/rotation for better control in prototype)
-      const speed = 10;
-      const turnSpeed = 2;
+      // Driving direction
+      const currentRotation = new THREE.Euler(rotation.current[0], rotation.current[1], rotation.current[2]);
+      const driveDirection = new THREE.Vector3(0, 0, 1).applyEuler(currentRotation);
       
-      let moveX = 0;
-      let moveZ = 0;
+      if (forward !== 0) {
+        const v = driveDirection.multiplyScalar(forward * TANK_SPEED);
+        api.velocity.set(v.x, velocity.current[1], v.z);
+      } else {
+        // Stop movement if no keys pressed
+        api.velocity.set(0, velocity.current[1], 0);
+      }
 
-      if (controls.forward) moveZ += speed;
-      if (controls.backward) moveZ -= speed;
+      // 2. Turret Aiming (Follow Mouse)
+      const raycaster = state.raycaster;
+      const mouse = state.mouse;
+      raycaster.setFromCamera(mouse, camera);
+
+      // We want the turret to look at the intersection with the ground plane (y=0 or close)
+      const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+      const targetPoint = new THREE.Vector3();
+      raycaster.ray.intersectPlane(groundPlane, targetPoint);
+
+      if (turretRef.current) {
+        const worldPos = new THREE.Vector3();
+        turretRef.current.getWorldPosition(worldPos);
+        const directionToTarget = new THREE.Vector3().subVectors(targetPoint, worldPos);
+        directionToTarget.y = 0; // Keep turret horizontal
+        
+        // This makes the turret rotate relative to the tank's rotation
+        // We use lookAt but need to handle it in local space if it's a child of the physics body
+        // Or easier: turret is a child of the group which is moved by physics
+        const targetQuaternion = new THREE.Quaternion().setFromUnitVectors(
+          new THREE.Vector3(0, 0, 1),
+          directionToTarget.normalize()
+        );
+        
+        // Compensate for parent (tank) rotation to make it feel absolute to the world
+        const parentQuat = new THREE.Quaternion().setFromEuler(currentRotation);
+        const localQuat = parentQuat.invert().multiply(targetQuaternion);
+        turretRef.current.quaternion.slerp(localQuat, 0.1);
+      }
+
+      // 3. Camera Follow
+      const tankPos = new THREE.Vector3();
+      ref.current.getWorldPosition(tankPos);
       
-      const direction = new THREE.Vector3(0, 0, moveZ).applyQuaternion(quat);
-      chassisApi.velocity.set(direction.x, -2, direction.z);
-
-      if (controls.left) chassisApi.angularVelocity.set(0, turnSpeed, 0);
-      else if (controls.right) chassisApi.angularVelocity.set(0, -turnSpeed, 0);
-      else chassisApi.angularVelocity.set(0, 0, 0);
-
-      // Camera follow
-      const cameraOffset = new THREE.Vector3(0, 5, -10).applyQuaternion(quat);
-      camera.position.lerp(pos.clone().add(cameraOffset), 0.1);
-      camera.lookAt(pos);
+      const cameraOffset = new THREE.Vector3(0, 8, -12).applyEuler(currentRotation);
+      const targetCameraPos = tankPos.clone().add(cameraOffset);
+      
+      camera.position.lerp(targetCameraPos, 0.1);
+      camera.lookAt(tankPos);
     }
   });
 
   return (
-    <group ref={chassisRef}>
-      {/* Body */}
-      <mesh castShadow>
-        <boxGeometry args={[TANK_WIDTH, TANK_HEIGHT, TANK_LENGTH]} />
-        <meshStandardMaterial color={color} />
+    <group ref={ref as any}>
+      {/* Chassis - The main body box */}
+      <mesh castShadow receiveShadow>
+        <boxGeometry args={[2, 0.8, 3]} />
+        <meshStandardMaterial color={isPlayer ? "#2d5a27" : "#8b0000"} />
       </mesh>
-      {/* Turret */}
-      <mesh position={[0, TANK_HEIGHT, 0]} castShadow>
-        <boxGeometry args={[1, 0.5, 1]} />
-        <meshStandardMaterial color={color} />
+
+      {/* Treads - Cosmetic */}
+      <mesh position={[-1.1, -0.2, 0]}>
+        <boxGeometry args={[0.3, 0.5, 3.2]} />
+        <meshStandardMaterial color="#222" />
       </mesh>
-      {/* Barrel */}
-      <mesh position={[0, TANK_HEIGHT, 1]} castShadow>
-        <boxGeometry args={[0.2, 0.2, 1.5]} />
-        <meshStandardMaterial color="black" />
+      <mesh position={[1.1, -0.2, 0]}>
+        <boxGeometry args={[0.3, 0.5, 3.2]} />
+        <meshStandardMaterial color="#222" />
       </mesh>
+
+      {/* Turret Assembly */}
+      <group position={[0, 0.7, 0]} ref={turretRef as any}>
+        <mesh castShadow>
+          <boxGeometry args={[1.4, 0.6, 1.4]} />
+          <meshStandardMaterial color={isPlayer ? "#3d7a36" : "#a52a2a"} />
+        </mesh>
+        
+        {/* Barrel */}
+        <mesh 
+          position={[0, 0, 1.2]} 
+          rotation={[Math.PI / 2, 0, 0]} 
+          ref={barrelRef as any}
+          castShadow
+        >
+          <cylinderGeometry args={[0.15, 0.15, 2]} />
+          <meshStandardMaterial color="#1a1a1a" />
+        </mesh>
+      </group>
     </group>
   );
-}
+};
 

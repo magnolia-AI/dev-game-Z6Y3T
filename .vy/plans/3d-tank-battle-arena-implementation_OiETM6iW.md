@@ -11,7 +11,7 @@ The application will utilize a modular component-based architecture for the 3D s
 - [x] **1. Initialize main game store** <!-- id:fFQS47 -->
   Use Zustand to track score, player health, and game state (active/paused/game over) in hooks/use-game-store.ts.
 
-- [ ] **2. Create Physics-enabled Tank component** <!-- id:Udexvr -->
+- [x] **2. Create Physics-enabled Tank component** <!-- id:Udexvr -->
   Implement components/game/tank.tsx using useBox for the chassis and nested meshes for the turret and barrel. Add keyboard controls for the player instance.
 
 - [ ] **3. Implement Projectile System** <!-- id:ze9JEq -->

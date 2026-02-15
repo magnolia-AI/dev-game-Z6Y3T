@@ -2,7 +2,7 @@
 
 import { Canvas } from "@react-three/fiber";
 import { Physics } from "@react-three/cannon";
-import { Sky, Stars, OrbitControls } from "@react-three/drei";
+import { Sky, Stars } from "@react-three/drei";
 import { Suspense, useState, useEffect } from "react";
 import { Tank } from "./tank";
 import { Ground } from "./ground";
@@ -10,7 +10,7 @@ import { useGameStore } from "@/hooks/use-game-store";
 import { Button } from "@/components/ui/button";
 
 export default function GameScene() {
-  const { score, health, isGameOver, resetGame } = useGameStore();
+  const { score, health, status, resetGame } = useGameStore();
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -18,6 +18,8 @@ export default function GameScene() {
   }, []);
 
   if (!isClient) return null;
+
+  const isGameOver = status === "game-over";
 
   return (
     <div className="relative w-full h-screen bg-background">
@@ -55,17 +57,15 @@ export default function GameScene() {
             <Tank isPlayer position={[0, 2, 0]} />
             
             {/* Enemy Tanks */}
-            <Tank position={[10, 2, 10]} color="red" />
-            <Tank position={[-15, 2, -5]} color="red" />
-            <Tank position={[5, 2, -15]} color="red" />
+            <Tank position={[10, 2, 10]} />
+            <Tank position={[-15, 2, -5]} />
+            <Tank position={[5, 2, -15]} />
           </Physics>
-          
-          <OrbitControls makeDefault />
         </Suspense>
       </Canvas>
       
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-muted-foreground text-sm bg-background/50 px-4 py-2 rounded-full border border-border">
-        WASD to Move • Space to Shoot (Coming Soon) • Mouse to Look Around
+        WASD to Move • Mouse to Aim • Space to Shoot (Coming Soon)
       </div>
     </div>
   );
